@@ -11,14 +11,16 @@
 #include "sdkconfig.h"
 
 #define PWMPID_TASK_STACKSIZE (4096)
+#define PWM_CONTROL_PIN (GPIO_NUM_21)
 
-#define PWM_RES_HZ 16384
-#define PWM_RES LEDC_TIMER_10_BIT
-#define PWM_CONTROL_PIN GPIO_NUM_21;
+#define PWM_RES_HZ (16384)
+#define PWM_RES (LEDC_TIMER_10_BIT)
+#define PWM_SPEED_MODE LEDC_LOW_SPEED_MODE
+#define PWM_CHANNEL LEDC_CHANNEL_0
 
-#define PID_P 1
-#define PID_I 0
-#define PID_D 0
+#define PID_P (1)
+#define PID_I (0)
+#define PID_D (0.7)
 
 static const char* TAG_PID = "PID";
 
@@ -43,19 +45,19 @@ typedef struct params_pidController_t {
   double* integral;
 } params_pidController_t;
 
-void initPWM(bool clamp)
+void initPWM()
 {
   ledc_timer_config_t cfg_pwmTimer = {
-    .speed_mode = LEDC_LOW_SPEED_MODE,
+    .speed_mode = PWM_SPEED_MODE,
     .duty_resolution = PWM_RES,
     .timer_num = LEDC_TIMER_0,
     .freq_hz = PWM_RES_HZ,
     .clk_cfg = LEDC_AUTO_CLK
   };
   ledc_channel_config_t cfg_pwmChannel = {
-    .gpio_num = 23,
-    .speed_mode = LEDC_LOW_SPEED_MODE,
-    .channel = LEDC_CHANNEL_0,
+    .gpio_num = PWM_CONTROL_PIN,
+    .speed_mode = PWM_SPEED_MODE,
+    .channel = PWM_CHANNEL,
     .timer_sel = LEDC_TIMER_0,
     .duty = 0,
     .hpoint = 0
@@ -63,6 +65,9 @@ void initPWM(bool clamp)
 
   ledc_timer_config(&cfg_pwmTimer);
   ledc_channel_config(&cfg_pwmChannel);
+
+  ledc_set_duty(PWM_SPEED_MODE, PWM_CHANNEL, 0);
+  ledc_update_duty(PWM_SPEED_MODE, PWM_CHANNEL);
 }
 
 /// @param percent - Value from 0 to 1
@@ -72,7 +77,8 @@ void initPWM(bool clamp)
 void updatePWM(double percent)
 {
   int dutyCycle = round(percent * (pow(2.0, PWM_RES) - 1));
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, dutyCycle);
+  ledc_set_duty(PWM_SPEED_MODE, PWM_CHANNEL, dutyCycle);
+  ledc_update_duty(PWM_SPEED_MODE, PWM_CHANNEL);
 }
 
 /// @param current  Current value
@@ -81,27 +87,23 @@ void updatePWM(double percent)
 /// @brief PID controller
 double pidController(params_pidController_t pidParams)
 {
-  params_pidController_t* params = &pidParams;
-
   double* targetPoint = pidParams.targetPoint;
   double* current = pidParams.current;
 
-  double error = targetPoint - current;
-  double* prevError = params->prevError;
-  double* integral = params->integral;
-
-  *integral += error;
+  double error = *targetPoint - *current;
+  double* prevError = pidParams.prevError;
+  double* integral = pidParams.integral;
 
   double pOut = PID_P * error;
-  double iOut = PID_I * *integral;
+  double iOut = (*integral += PID_I * error);
   double dOut = PID_D * (error - *prevError);
 
   *prevError = error;
 
+  ESP_LOGI(TAG_PID, "P %f, I %f, D %f", pOut, iOut, dOut);
   double pidOut = (pOut + iOut + dOut) / *targetPoint;
-  ESP_LOGI(TAG_PID, "pOut: %f", pidOut);
 
-  if (!params->clamp)
+  if (!pidParams.clamp)
     return pidOut;
 
   if (pidOut > 1) {
@@ -120,25 +122,25 @@ void task_pidPwmControl(void* pvParameters)
   double* setPoint = params->setPoint;
   double* currentTemp = params->currentTemp;
 
-  double* prevError = 0;
-  double* integral = 0;
+  double prevError = 0.0;
+  double integral = 0.0;
 
   params_pidController_t pidParams = {
     .current = currentTemp,
     .targetPoint = setPoint,
     .clamp = true,
 
-    .prevError = prevError,
-    .integral = integral
+    .prevError = &prevError,
+    .integral = &integral
   };
+
+  initPWM();
 
   while (1) {
     double pidOut = pidController(pidParams);
+    
+    updatePWM(pidOut);
 
-    ESP_LOGI(TAG_PID, "pidOut: %f", pidOut);
-    ESP_LOGI(TAG_PID, "setPoint: %f", *setPoint);
-    ESP_LOGI(TAG_PID, "currentTemp: %f", *currentTemp);
-
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 }

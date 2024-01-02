@@ -12,7 +12,7 @@
 #include "pid.h"
 #include "uart.h"
 
-static const char* TAG = "Main";
+static const char* TAG = "MAIN";
 
 static double currentTemp = 2;
 static double targetTemp = 0;
@@ -26,13 +26,13 @@ void taskFunc_UART(char buf[], int data)
     ESP_LOGI(TAG, "changed setpoint %f", targetTemp);
     break;
 
-  case 98123:
+  case 93:
     currentTemp += 1;
     ESP_LOGI(TAG, "changed current %f", currentTemp);
     break;
 
   default:
-    ESP_LOGI(TAG, "unknown command: %d", data);
+    // ESP_LOGI(TAG, "unknown command: %d", data);
     break;
   }
 }
