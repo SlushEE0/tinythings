@@ -30,7 +30,7 @@ typedef struct params_UartTask_t {
   char* tag;
 } params_UartTask_t;
 
-void writeUART(char msg[], char eraseBuf[], int delete)
+void writeUART(char msg[], char eraseBuf[], bool delete)
 {
   // writes to the UART console
   // provide msg to write and delete after write
@@ -43,10 +43,10 @@ void writeUART(char msg[], char eraseBuf[], int delete)
   ESP_ERROR_CHECK(uart_flush(UART_PORT));
   uart_write_bytes(UART_PORT, print, strlen(print));
   ESP_ERROR_CHECK(uart_flush(UART_PORT));
-  
+
   free(print);
 
-  if (delete == 1)
+  if (delete)
     memset(eraseBuf, 0, strlen(eraseBuf));
 }
 
@@ -93,7 +93,7 @@ void task_UART(void* pvParameters)
   ESP_ERROR_CHECK(uart_set_pin(UART_PORT, TX_PIN, RX_PIN, RTSN_PIN, CTSN_PIN));
   ESP_ERROR_CHECK(uart_driver_install(UART_PORT, UART_TXRX_BUFLEN, 0, 0, NULL, 0));
 
-  char buf[ UART_BUF_SIZE ] = "";
+  char buf[UART_BUF_SIZE] = "";
 
   while (1) {
     taskFunc(buf, readUART(buf, UART_BUF_SIZE));

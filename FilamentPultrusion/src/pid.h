@@ -10,11 +10,18 @@
 #include "freertos/task.h"
 #include "sdkconfig.h"
 
-#define PWMPID_TASK_STACKSIZE (4096)
+#ifndef BIT_WIDTH
+#define BIT_WIDTH (LEDC_TIMER_12_BIT)
+#endif
+
+#ifndef PWM_CONTROL_PIN
 #define PWM_CONTROL_PIN (GPIO_NUM_21)
+#endif
+
+#define PWMPID_TASK_STACKSIZE (4096)
 
 #define PWM_RES_HZ (16384)
-#define PWM_RES (LEDC_TIMER_10_BIT)
+#define PWM_RES BIT_WIDTH
 #define PWM_SPEED_MODE LEDC_LOW_SPEED_MODE
 #define PWM_CHANNEL LEDC_CHANNEL_0
 
@@ -76,7 +83,7 @@ void initPWM()
 /// @brief Multiplies max duty cycle by percent.
 void updatePWM(double percent)
 {
-  int dutyCycle = round(percent * (pow(2.0, PWM_RES) - 1));
+  int dutyCycle = round(percent * (pow(2.0, BIT_WIDTH) - 1));
   ledc_set_duty(PWM_SPEED_MODE, PWM_CHANNEL, dutyCycle);
   ledc_update_duty(PWM_SPEED_MODE, PWM_CHANNEL);
 }
@@ -138,7 +145,7 @@ void task_pidPwmControl(void* pvParameters)
 
   while (1) {
     double pidOut = pidController(pidParams);
-    
+
     updatePWM(pidOut);
 
     vTaskDelay(100 / portTICK_PERIOD_MS);

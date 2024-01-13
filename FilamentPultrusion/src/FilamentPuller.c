@@ -10,6 +10,7 @@
 #include "sdkconfig.h"
 
 #include "pid.h"
+#include "thermistor.h"
 #include "uart.h"
 
 static const char* TAG = "MAIN";
@@ -48,6 +49,7 @@ void app_main(void)
     .setPoint = &targetTemp,
   };
 
-  xTaskCreate(task_pidPwmControl, "control temp", PWMPID_TASK_STACKSIZE, &pidTaskParams, 10, NULL);
-  xTaskCreate(task_UART, "uart_task", UART_TASK_STACKSIZE, &uartTaskParams, 10, NULL);
+  xTaskCreate(task_pidPwmControl, "control temp", PWMPID_TASK_STACKSIZE, &pidTaskParams, 3, NULL);
+  xTaskCreate(task_UART, "uart_task", UART_TASK_STACKSIZE, &uartTaskParams, 5, NULL);
+  xTaskCreate(task_temp, "get temp", 4096, NULL, 5, NULL);
 }
