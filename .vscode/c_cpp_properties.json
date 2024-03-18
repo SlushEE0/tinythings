@@ -292,7 +292,7 @@
             ],
             "cStandard": "gnu17",
             "cppStandard": "gnu++23",
-            "compilerPath": "D:/Coding/.INSTALLS/IDF-TOOLS_5.2/tools/riscv32-esp-elf/esp-13.2.0_20230928/riscv32-esp-elf/bin/riscv32-esp-elf-gcc.exe",
+            "compilerPath": "cl.exe",
             "compilerArgs": []
         }
     ],
