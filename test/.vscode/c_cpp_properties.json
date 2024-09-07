@@ -1,0 +1,25 @@
+{
+  "configurations": [
+    {
+      "name": "ESP-IDF",
+      "compilerPath": "${config:idf.toolsPathWin}\\tools\\riscv32-esp-elf\\esp-13.2.0_20230928\\riscv32-esp-elf\\bin\\riscv32-esp-elf-gcc.exe",
+      "compileCommands": "${workspaceFolder}/**/build/compile_commands.json",
+      "includePath": [
+        "a:/Coding/.INSTALLS/ESP_IDF/**/components/**",
+        "${config:idf.espIdfPathWin}/components/**",
+        "${config:idf.espAdfPath}/components/**",
+        "${config:idf.espAdfPathWin}/components/**",
+        "${workspaceFolder}/**"
+      ],
+      "browse": {
+        "path": [
+          "a:/Coding/.INSTALLS/ESP_IDF/**/components",
+          "${workspaceFolder}/managed_components"
+        ],
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "cStandard": "c23"
+    }
+  ],
+  "version": 4
+}

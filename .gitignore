@@ -1,0 +1,10 @@
+/**/.INSTALLS/*/*
+
+/esp-idf
+
+/**/build
+/**/managed_components
+/**/esp-idf-lib
+
+/**/certs
+/**/secrets.h
