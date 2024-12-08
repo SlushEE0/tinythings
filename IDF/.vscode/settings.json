@@ -1,0 +1,10 @@
+{
+  "files.associations": {
+    "string.h": "c",
+    "gpio.h": "c",
+    "stdio.h": "c",
+    "task.h": "c",
+    "esp_timer.h": "c",
+    "ets_sys.h": "c"
+  }
+}
